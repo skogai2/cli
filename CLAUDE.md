@@ -150,8 +150,8 @@ Agreed overall, from claude's first assumptions and the user's answers.
 - tooling - arch, git, pacman/makepkg; scripts in bash, not fish, so they
   run anywhere; shellcheck.
 - language - bash.
-- format - git-config format, read with `git config --file`. Worked fine
-  in the last test version. Line-based, so the git diff is the state diff.
+- format - markdown frontmatter, read with yq (see open questions). Was
+  git config; replaced by the module-as-markdown direction.
 - types - int, bool, path, string; enough for settings. Richer types come
   at the command-runner stage.
 - keys - lowercase, dotted (`section.key`). Env is `SKOGAI_` + uppercase
@@ -167,29 +167,38 @@ Agreed overall, from claude's first assumptions and the user's answers.
 - done - tests that run with only the repo (bats, against a relocated
   setup), help text, and a line in this file.
 
-### config as markdown frontmatter? (user's experiment, not decided)
+### config as markdown frontmatter (direction, replaces git config)
 
-The user tried `tmp/frontmatter/argc.sh` against
-`.skogai/base/global.config.md`. It is extracted from the old runner, so
-only its intents are recorded here, not its code.
+A module is one markdown file. Its frontmatter says what it is and holds
+its default settings; its body is the docs. Example
+(`tmp/config/example.md`):
 
-- one file is both docs and settings: yaml frontmatter holds the keys, the
-  markdown body explains them.
-- a module describes itself the same way: `type`, `name`, `description`,
-  `command`, `tools`, `requires`.
-- each `x.md` layer has an `x.local.md` applied after it; writes go to the
-  `.local.md`, never the committed file. A candidate answer to where
-  runtime values live.
-- a null removes a key an earlier layer set, so a layer can delete as well
-  as override; a full diff, not only overrides.
-- lists are one value; nested maps flatten to dotted keys.
+    type: module            # what this file is
+    name: config
+    description: ...
+    command: argc.sh        # what the command runner runs
+    tools: [git, yq, argc]  # what must exist where it runs
+    requires: [foo.md, bar.md]  # other modules it builds on
+    config.foo: true        # its settings, with their defaults
+    config.int: 52
+
+`skogai list` over it gives flat `key=value` lines, lists as one line per
+item.
+
+How it fits what is already decided:
+
+- modules, settings, and runner become one thing: settings are the
+  frontmatter of modules, and the runner runs a module's `command`.
+- defaults are the committed `x.md` files in `.skogai/base/`; runtime
+  values go in `x.local.md` beside them, never into the committed file.
+- scopes stay: the same module is layered system, global, local, each
+  with its `.local.md` after it, then env.
+- a null removes a key an earlier layer set, so layers are full diffs.
+- types come from yaml: bool, int, string, list. Path is a convention.
+- `tools` answers part of the core question: a sandbox can check up front
+  that what a module needs is there.
 - env names: `.` becomes `_`, `-` is dropped, `_` in a key reads as `-`.
-  This answers the `_` clash noted under keys.
-- every value knows which layer it came from (`--show-origin`).
-- argc as the command runner, yq as the parser.
-
-Against the git-config decision: frontmatter needs yq in the sandbox and
-has richer types; git config needs only git. Not decided.
+- cost: yq (and argc) must exist where it runs, not only git.
 
 ### how does `.skogai/base` track its point in time?
 
