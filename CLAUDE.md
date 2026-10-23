@@ -276,7 +276,7 @@ Each phase lists the intent it serves and how we know it is done.
 ### phase 0 - foundation
 
 - [x] empty repo, clean-room rule written down
-- [x] intentions above described and agreed (broad basics)
+- [x] goals above described and agreed (broad basics)
 - [x] general tooling and preferences written down
 - [x] language/runtime: bash
 - [x] settings file format: git config
