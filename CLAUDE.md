@@ -52,6 +52,8 @@ Problems as first described (a starting list, not yet agreed):
 
 - Only the local scope exists. A sandbox has no `/etc/skogai` and no
   user xdg config, so system and global settings are missing.
+  Partly answered: the repo carries a snapshot of the base state (see
+  concepts), so defaults are always present.
 - Env is the only way in from outside. Anything not in the repo has to
   arrive through environment variables.
 - Secrets cannot live in the repo, yet the repo is all the agent has.
@@ -72,10 +74,17 @@ The ideas the cli is built around. One line each: name - what it means.
 - scopes - settings come in layers following classic linux rules:
   system, global, local, env. Each layer overrides the one before it, so
   the most specific wins.
-  - system - machine-wide, `/etc/skogai`.
+  - system - machine-wide, `/etc/skogai`. The base case: the default
+    values everything else is applied on top of.
   - global - per user, the xdg layer (`$XDG_CONFIG_HOME/skogai`).
   - local - per project, `.skogai` in the project.
   - env - the current process, environment variables.
+- state as diff - state is thought of functionally, like a git diff that
+  gets applied. Each scope is a diff applied on top of the one before it.
+- every key has a default - no key-value exists without a base value, so
+  a lookup always has an answer.
+- base snapshot - each repo carries a copy of the base state as it was at
+  a point in time: the last clone, update, or sync of that repo.
 
 ## tools
 
