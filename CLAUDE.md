@@ -41,10 +41,30 @@ agreed.
 - A modular framework, combined mainly from two parts: a command runner
   and settings via key-value lookups.
 
+## the core question
+
+What this project tries to answer that most similar solutions do not:
+
+> How do we manage ai agents working in sandboxes with only a project repo
+> checked out, and the problems that come with it?
+
+Problems as first described (a starting list, not yet agreed):
+
+- Only the local scope exists. A sandbox has no `/etc/skogai` and no
+  user xdg config, so system and global settings are missing.
+- Env is the only way in from outside. Anything not in the repo has to
+  arrive through environment variables.
+- Secrets cannot live in the repo, yet the repo is all the agent has.
+- Tools the user has installed may not exist in the sandbox.
+- Work done in the sandbox, beyond commits, is lost when it ends.
+- The same repo should behave the same on the user's machine and in a
+  sandbox, even though the layers around it differ.
+
 ## concepts
 
 The ideas the cli is built around. One line each: name - what it means.
 
+- skogai - the project name; used for every settings location below.
 - modular - the framework is made of separate parts that combine, not one
   monolith.
 - command runner - the part that runs commands.
@@ -52,9 +72,9 @@ The ideas the cli is built around. One line each: name - what it means.
 - scopes - settings come in layers following classic linux rules:
   system, global, local, env. Each layer overrides the one before it, so
   the most specific wins.
-  - system - machine-wide, the `/etc` layer.
-  - global - per user, the xdg layer.
-  - local - per project, a dotfolder in the project.
+  - system - machine-wide, `/etc/skogai`.
+  - global - per user, the xdg layer (`$XDG_CONFIG_HOME/skogai`).
+  - local - per project, `.skogai` in the project.
   - env - the current process, environment variables.
 
 ## tools
