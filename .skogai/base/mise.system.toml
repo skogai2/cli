@@ -1,0 +1,4 @@
+[skogai]
+config.system.dir = "/etc/skogai"
+config.system.file = "mise.toml"
+

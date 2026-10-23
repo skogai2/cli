@@ -7,20 +7,34 @@ decisions only; see `CLAUDE.md` for the goals behind them.
 ## model
 
 A setting is a key with a string value. Keys are lowercase and dotted
-(`core.debug`). Each is a `SKOGAI_*` variable in the `[env]` of mise's
-`skogai` env: `SKOGAI_` + the key in uppercase, `.` as `_`.
+(`core.debug`). Each is a variable in the `[env]` of a mise env: the prefix + the key
+in uppercase, `.` as `_`. With the defaults, `core.debug` is
+`SKOGAI_CORE_DEBUG` in the `skogai` env.
 
 Layers, later wins:
 
-1. system - `/etc/mise/config.skogai.toml`
-2. global - `~/.config/mise/config.skogai.toml`
-3. base - the project's `mise.skogai.toml`, committed, never written by
-   a command
-4. local - the project's `mise.skogai.local.toml`
+1. system - `$SKOGAI_CONFIG_SYSTEM_FILE`
+2. global - `$SKOGAI_CONFIG_GLOBAL_FILE`
+3. base - `$SKOGAI_CONFIG_BASE_FILE`, the project's, committed, never
+   written by a command
+4. local - `$SKOGAI_CONFIG_LOCAL_FILE`, beside the base
 
-mise's own rules apply on top (`MISE_SYSTEM_CONFIG_DIR`,
-`MISE_CONFIG_DIR`, parent directories, `config.override.toml`). The
-project is the nearest directory up holding `mise.skogai.toml`.
+The project is the nearest directory up holding the base file.
+
+Every location is a setting, read from the environment, with a default
+that follows mise's own variables. `skogai-config -h` lists them:
+
+| variable                    | default                                        |
+|-----------------------------|------------------------------------------------|
+| `MISE_ENV`                  | `skogai`                                       |
+| `SKOGAI_CONFIG_PREFIX`      | `SKOGAI_`                                      |
+| `SKOGAI_CONFIG_SYSTEM_FILE` | `$MISE_SYSTEM_CONFIG_DIR/config.$MISE_ENV.toml` (`/etc/mise`) |
+| `SKOGAI_CONFIG_GLOBAL_FILE` | `$MISE_CONFIG_DIR/config.$MISE_ENV.toml` (`~/.config/mise`) |
+| `SKOGAI_CONFIG_BASE_FILE`   | `mise.$MISE_ENV.toml`                          |
+| `SKOGAI_CONFIG_LOCAL_FILE`  | `mise.$MISE_ENV.local.toml`                    |
+
+A location only counts if mise loads that file; the defaults are the
+names mise loads for that env.
 
 A `SKOGAI_*` value already in the calling shell is ignored: a shell with
 mise activated outside the `skogai` env carries its own, and it cannot

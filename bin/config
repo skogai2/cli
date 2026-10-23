@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
-# @describe Read and write key-value settings across layers.
-#
-# Settings are SKOGAI_* variables in the [env] of mise's skogai env, and fold
-# in mise's order, later wins: system, global, the project's committed
-# mise.skogai.toml, then its mise.skogai.local.toml. A key is core.debug for
-# SKOGAI_CORE_DEBUG. All writes go to a scope's file; mise.skogai.toml is the
-# base and never written. list hides values mise marks with redact = true.
+# Settings are prefixed variables in the [env] of a mise env, and fold in
+# mise's order, later wins: system, global, the project's base, then its local
+# file. A key is core.debug for SKOGAI_CORE_DEBUG. All writes go to a scope's
+# file; the base is committed and never written. list hides values mise marks
+# with redact = true. Every location below is a setting; its default follows
+# mise's own variables.
 # @meta require-tools mise,yq
-# @env MISE_ENV=skogai  The mise env holding the settings
+# @env MISE_ENV=skogai                                    The mise env holding the settings
+# @env SKOGAI_CONFIG_PREFIX=SKOGAI_                       Prefix of every setting's variable
+# @env SKOGAI_CONFIG_SYSTEM_FILE=`_default_system_file`   System scope
+# @env SKOGAI_CONFIG_GLOBAL_FILE=`_default_global_file`   Global scope
+# @env SKOGAI_CONFIG_BASE_FILE=`_default_base_file`       Project base, found by walking up: mise.$MISE_ENV.toml
+# @env SKOGAI_CONFIG_LOCAL_FILE=`_default_local_file`     Local scope
 
 # shellcheck source-path=SCRIPTDIR
 # shellcheck disable=SC2154 # argc_* come from --argc-eval, _* globals from lib
@@ -45,6 +49,22 @@ unset_() {
     mise unset -q --file "$(_scope_file "$argc_scope")" "$(_envname "$argc_key")"
 }
 
+# @cmd skogix
+# @arg myscope![`_choice_example`] <CHOICE>
+skogix() {
+    echo "scope: ${argc_myscope}"
+    # echo "SKOGAI_CONFIG_SYSTEM_FILE: $SKOGAI_CONFIG_SYSTEM_FILE"
+    # echo "SKOGAI_CONFIG_LOCAL_FILE: $SKOGAI_CONFIG_LOCAL_FILE"
+    # echo "SKOGAI_CONFIG_GLOBAL_FILE: $SKOGAI_CONFIG_GLOBAL_FILE"
+}
+
+_choice_example() {
+    echo "$SKOGAI_CONFIG_SYSTEM_FILE"
+    echo "$SKOGAI_CONFIG_LOCAL_FILE"
+    echo "$SKOGAI_CONFIG_GLOBAL_FILE"
+}
+
+
 # @cmd Print every resolved key as key=value, sorted by key
 # @flag --show-origin  Prefix each line with the layer it came from
 list() {
@@ -74,11 +94,32 @@ env_() {
 files() {
     _root
     local f
-    for f in "$(_scope_file system)" "$(_scope_file global)" mise.skogai.toml "$(_scope_file local)"; do
+    for f in "$SKOGAI_CONFIG_SYSTEM_FILE" "$SKOGAI_CONFIG_GLOBAL_FILE" "$SKOGAI_CONFIG_BASE_FILE" "$SKOGAI_CONFIG_LOCAL_FILE"; do
         [[ -f $f ]] && printf '%s\tpresent\n' "$f" || printf '%s\tmissing\n' "$f"
     done
 }
 
+
+_default_system_file() {
+  mise config get --file=/home/skogix/.config/mise/config.skogai.toml skogai.config.system.dir
+  # echo "$MISE_SYSTEM_CONFIG_DIR"
+    # printf '%s/config.%s.toml\n' "${MISE_SYSTEM_CONFIG_DIR:-/etc/mise}" "$MISE_ENV"
+}
+
+_default_global_file() {
+  mise config get --file=/home/skogix/.config/mise/config.skogai.toml skogai.config.global.dir
+    # printf '%s/config.%s.toml\n' "${MISE_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/mise}" "$MISE_ENV"
+}
+
+_default_base_file() {
+  echo ".skogai"
+    # printf 'mise.%s.toml\n' "$MISE_ENV"
+}
+
+_default_local_file() {
+  mise config get --file=/home/skogix/.config/mise/config.skogai.toml skogai.config.local.dir
+    # printf 'mise.%s.local.toml\n' "$MISE_ENV"
+}
 
 # value choices; argc needs these in this file
 _choice_key() {

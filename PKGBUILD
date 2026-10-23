@@ -4,7 +4,7 @@
 # installed version is always a commit.
 
 pkgname=skogai
-pkgver=0.0.2
+pkgver=0.0.2.r5.g3501112
 pkgrel=1
 pkgdesc='modular framework: argc commands, settings held by mise'
 arch=('any')

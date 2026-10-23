@@ -143,6 +143,33 @@ setup() {
     [[ $output == *'export SKOGAI_CORE_NAME=two\ words'* ]]
 }
 
+@test "help: every location is a setting with its default" {
+    run "$config" -h
+    [[ $output == *"MISE_ENV"*"[default: skogai]"* ]]
+    [[ $output == *"SKOGAI_CONFIG_LOCAL_FILE"* ]]
+}
+
+@test "MISE_ENV moves every file with it" {
+    export MISE_ENV=work
+    printf '%s\n' '[env]' 'SKOGAI_CORE_NAME = "work"' >mise.work.toml
+    run "$config" get core.name
+    [ "$output" = work ]
+    "$config" set core.name changed
+    [ -f mise.work.local.toml ]
+    [ ! -f mise.skogai.local.toml ]
+}
+
+@test "a location set in env is used" {
+    SKOGAI_CONFIG_GLOBAL_FILE=$BATS_TEST_TMPDIR/elsewhere.toml "$config" set core.name x --scope global
+    [ -f "$BATS_TEST_TMPDIR/elsewhere.toml" ]
+}
+
+@test "the prefix is a setting" {
+    printf '%s\n' '[env]' 'APP_CORE_NAME = "app"' >mise.skogai.toml
+    SKOGAI_CONFIG_PREFIX=APP_ run "$config" get core.name
+    [ "$output" = app ]
+}
+
 @test "files: every scope in fold order" {
     "$config" set core.debug true
     run "$config" files
