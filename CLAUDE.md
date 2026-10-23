@@ -141,22 +141,45 @@ arch base, never inside a sandbox.
 - not ideal: in a perfect world upgrades would not need a human. Accepted
   to start; to be revisited later.
 
-### first assumptions for phase 0 (claude's, not agreed)
+### phase 0 decisions
+
+Agreed overall, from claude's first assumptions and the user's answers.
 
 - tooling - arch, git, pacman/makepkg; scripts in bash, not fish, so they
   run anywhere; shellcheck.
-- language - bash for phase 1: the only runtime a bare sandbox is sure to
-  have. Revisit if settings outgrow it.
-- format - git-config format, read with `git config --file`: an existing,
-  tested key-value lookup available wherever git is. Line-based, so the
-  git diff is the state diff.
+- language - bash.
+- format - git-config format, read with `git config --file`. Worked fine
+  in the last test version. Line-based, so the git diff is the state diff.
+- types - int, bool, path, string; enough for settings. Richer types come
+  at the command-runner stage.
 - keys - lowercase, dotted (`section.key`). Env is `SKOGAI_` + uppercase
   with `.` as `_`. Watch: clashes if `_` is also a relation in names.
-- base snapshot - `.skogai/base/`, a frozen copy of `/etc/skogai` plus
-  the package version it came from. Upgrade = refresh it and commit; the
-  diff is what gets reviewed.
-- done - tests that run with only the repo (bats, against a fake root),
-  help text, and a line in this file.
+- locations are settings - where each scope is read from is itself a
+  setting with a default, e.g. `SKOGAI_SYSTEM_CONFIG_DIR=/etc/skogai`.
+  Location keys can only come from env or their default, since a file
+  cannot say where files are.
+- tests run against a real setup - point the location settings at a
+  local folder and the whole layered setup runs there. No mocks; the test
+  setup is the real one, relocated.
+- done - tests that run with only the repo (bats, against a relocated
+  setup), help text, and a line in this file.
+
+### how does `.skogai/base` track its point in time?
+
+First assumption: a plain copy of `/etc/skogai` plus the package version
+it came from. User's idea, not yet thought through: make it a git-native
+reference to a SHA instead (submodule, sparse checkout, or similar), so
+"base state at a point in time" is literally a commit.
+
+- pro: the point in time is a SHA, not a version string we maintain.
+- pro: upgrade = move the reference; the diff to review comes from git.
+- pro: trust existing systems; git already does this.
+- con: a submodule is empty unless cloned with submodules and the sandbox
+  can reach the base repo. That works against the core question.
+- con: the base then comes from a git repo, not from the pacman package;
+  how the two relate needs an answer.
+- to check: subtree-style approaches copy the content into the repo while
+  still recording the SHA, which may get both.
 
 ## roadmap
 
@@ -166,12 +189,12 @@ Each phase lists the intent it serves and how we know it is done.
 
 - [x] empty repo, clean-room rule written down
 - [x] intentions above described and agreed (broad basics)
-- [ ] general tooling and preferences written down
-- [ ] choose language/runtime from the intentions, not from habit
-- [ ] settings file format (prefer an existing one)
-- [ ] key naming, and how a key maps to an env variable
-- [ ] where the base snapshot lives in `.skogai`
-- [ ] decide what "done" means (tests, docs, help text)
+- [x] general tooling and preferences written down
+- [x] language/runtime: bash
+- [x] settings file format: git config
+- [x] key naming, and how a key maps to an env variable
+- [ ] how `.skogai/base` tracks its point in time
+- [x] what "done" means
 
 ### phase 1 - settings
 
@@ -180,7 +203,9 @@ only is deliberate: it forces the questions about how things are applied
 to be answered before commands or bigger ideas are built on top. See open
 questions.
 
+- [ ] location settings for each scope, with defaults
 - [ ] key-value lookup across system, global, local, env
+- [ ] test setup: the real layered setup, relocated to a local folder
 - [ ] every key has a default from the system layer
 - [ ] a repo carries its base snapshot
 - [ ] installed as a pacman package that owns `/etc/skogai`
