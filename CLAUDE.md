@@ -100,7 +100,7 @@ A thing is done when its spec, tests and help text agree.
 
 ## roadmap
 
-### 0.0.1 - config (done)
+### 0.0.1 - config (released, tag `v0.0.1`)
 
 - [x] layered lookup: module defaults, system, global, local, env
 - [x] every location is a setting with a local default

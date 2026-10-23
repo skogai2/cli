@@ -4,7 +4,7 @@
 # installed version is always a commit.
 
 pkgname=skogai
-pkgver=r0
+pkgver=0.0.1
 pkgrel=1
 pkgdesc='modular framework: a command runner and layered key-value settings'
 arch=('any')
@@ -16,7 +16,8 @@ sha256sums=('SKIP')
 
 pkgver() {
   cd "$pkgname"
-  printf 'r%s.%s' "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+  # v0.0.1 on a tag; 0.0.1.r3.gabc1234 three commits after it
+  git describe --tags --long --abbrev=7 | sed -E 's/^v//; s/-0-g[0-9a-f]+$//; s/-([0-9]+)-g/.r\1.g/'
 }
 
 package() {
