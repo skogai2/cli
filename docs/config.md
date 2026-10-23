@@ -17,11 +17,14 @@ Layers, later wins:
 3. base - the project's `mise.skogai.toml`, committed, never written by
    a command
 4. local - the project's `mise.skogai.local.toml`
-5. env - `SKOGAI_*` in the process, when it differs from mise's value
 
 mise's own rules apply on top (`MISE_SYSTEM_CONFIG_DIR`,
 `MISE_CONFIG_DIR`, parent directories, `config.override.toml`). The
 project is the nearest directory up holding `mise.skogai.toml`.
+
+A `SKOGAI_*` value already in the calling shell is ignored: a shell with
+mise activated outside the `skogai` env carries its own, and it cannot
+be told apart from a deliberate one.
 
 A key exists only if some layer sets it. New keys are declared by adding
 them to the base.
@@ -43,8 +46,6 @@ $ skogai-config get core.name
 skogai
 $ skogai-config get core.debug --show-origin
 file:/path/to/proj/mise.skogai.local.toml	true
-$ SKOGAI_CORE_RETRIES=9 skogai-config get core.retries --show-origin
-env:SKOGAI_CORE_RETRIES	9
 $ skogai-config get core.missing
 error: invalid value `core.missing` for `<KEY>`           (exit 1)
   [possible values: core.debug, core.name, core.retries]
@@ -77,7 +78,8 @@ core.name=skogai
 core.retries=3
 ```
 
-`--show-origin` prefixes each line like `get`.
+`--show-origin` prefixes each line like `get`. A value mise marks with
+`redact = true` shows as `[redacted]`.
 
 ### env
 

@@ -3,9 +3,9 @@
 #
 # Settings are SKOGAI_* variables in the [env] of mise's skogai env, and fold
 # in mise's order, later wins: system, global, the project's committed
-# mise.skogai.toml, its mise.skogai.local.toml, then SKOGAI_* in the process.
-# A key is core.debug for SKOGAI_CORE_DEBUG. All writes go to a scope's file;
-# mise.skogai.toml is the base and never written.
+# mise.skogai.toml, then its mise.skogai.local.toml. A key is core.debug for
+# SKOGAI_CORE_DEBUG. All writes go to a scope's file; mise.skogai.toml is the
+# base and never written. list hides values mise marks with redact = true.
 # @meta require-tools mise,yq
 # @env MISE_ENV=skogai  The mise env holding the settings
 
@@ -49,12 +49,14 @@ unset_() {
 # @flag --show-origin  Prefix each line with the layer it came from
 list() {
     _fold
-    local k
+    local k v
     for k in $(_sorted_keys); do
+        v=${_val[$k]}
+        [[ ${_secret[$k]:-} ]] && v='[redacted]'
         if [[ ${argc_show_origin:-} ]]; then
-            printf '%s\t%s=%s\n' "${_org[$k]}" "$k" "${_val[$k]}"
+            printf '%s\t%s=%s\n' "${_org[$k]}" "$k" "$v"
         else
-            printf '%s=%s\n' "$k" "${_val[$k]}"
+            printf '%s=%s\n' "$k" "$v"
         fi
     done
 }
@@ -82,7 +84,13 @@ files() {
 _choice_key() {
     _fold
     local k
-    for k in $(_sorted_keys); do _candidate "$k" "${_val[$k]}"; done
+    for k in $(_sorted_keys); do
+        if [[ ${_secret[$k]:-} ]]; then
+            _candidate "$k" '[redacted]'
+        else
+            _candidate "$k" "${_val[$k]}"
+        fi
+    done
 }
 
 _choice_value() {

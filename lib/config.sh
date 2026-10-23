@@ -20,35 +20,36 @@ _scope_file() {
     esac
 }
 
-# _val: value, _org: origin; mise resolves, the process env wins over it
+# _val: value, _org: origin, _secret: keys mise marks for redaction
 _fold() {
     _root
-    declare -gA _val=() _org=()
-    local name v src k
+    declare -gA _val=() _org=() _secret=()
+    local name v
     while IFS=$'\t' read -r name v; do
         _val[$(_keyname "$name")]=$v
-    done < <(mise env --json | yq -p json -o tsv \
-        'to_entries | map(select(.key | test("^SKOGAI_"))) | .[] | [.key, .value]') ||
-        { echo 'error: mise could not resolve the env' >&2; exit 2; }
+    done < <(_mise_env --json) || { echo 'error: mise could not resolve the env' >&2; exit 2; }
+    while IFS=$'\t' read -r name v; do
+        _secret[$(_keyname "$name")]=1
+    done < <(_mise_env --json --redacted)
     # mise set lists each variable with its source file last
     while read -r name v; do
-        [[ $name == SKOGAI_* ]] || continue
-        src=${v##* }
-        _org[$(_keyname "$name")]=file:$src
-    done < <(mise set 2>/dev/null)
-    for k in "${!_val[@]}"; do
-        name=$(_envname "$k")
-        if [[ -v $name && ${!name} != "${_val[$k]}" ]]; then
-            _val[$k]=${!name} _org[$k]=env:$name
+        if [[ $name == SKOGAI_* ]]; then
+            _org[$(_keyname "$name")]=file:${v##* }
         fi
-    done
+    done < <(mise set 2>/dev/null)
+}
+
+# SKOGAI_* from mise env as name<TAB>value; never the calling shell's values
+_mise_env() {
+    mise env "$@" 2>/dev/null | yq -p json -o tsv \
+        'to_entries | map(select(.key | test("^SKOGAI_"))) | .[] | [.key, .value]'
 }
 
 # keys a single file sets
 _file_keys() {
     [[ -f $1 ]] || return 0
     yq -p toml -o tsv '.env // {} | keys | .[]' "$1" | while read -r name; do
-        [[ $name == SKOGAI_* ]] && _keyname "$name"
+        if [[ $name == SKOGAI_* ]]; then _keyname "$name"; fi
     done | LC_ALL=C sort
 }
 

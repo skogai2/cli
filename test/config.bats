@@ -56,16 +56,24 @@ setup() {
     [[ $output == file:*mise.skogai.local.toml$'\t'5 ]]
 }
 
-@test "get: env wins over every file" {
-    "$config" set core.retries 5
-    SKOGAI_CORE_RETRIES=9 run "$config" get core.retries --show-origin
-    [ "$output" = $'env:SKOGAI_CORE_RETRIES\t9' ]
+@test "get: a value already in the shell does not count" {
+    # a shell with mise activated outside the skogai env carries its own SKOGAI_*
+    SKOGAI_CORE_RETRIES='' run "$config" get core.retries
+    [ "$output" = 3 ]
 }
 
 @test "get: an unknown key is exit 1" {
     run "$config" get core.missing
     [ "$status" -eq 1 ]
     [[ $output == *core.name* ]]
+}
+
+@test "get: other variables mise sets are left out" {
+    printf '%s\n' '[env]' 'OTHER = "x"' >"$MISE_CONFIG_DIR/config.toml"
+    run "$config" list
+    [ "$status" -eq 0 ]
+    [[ $output == *core.name=skogai* ]]
+    [[ $output != *OTHER* && $output != *other* ]]
 }
 
 @test "get: an empty value is empty" {
@@ -120,6 +128,13 @@ setup() {
     run "$config" list
     [ "$status" -eq 0 ]
     [ "$output" = $'core.debug=false\ncore.empty=\ncore.name=skogai\ncore.retries=3' ]
+}
+
+@test "list: a value mise redacts is hidden" {
+    printf '%s\n' 'SKOGAI_CORE_TOKEN = { value = "s3cret", redact = true }' >>mise.skogai.toml
+    run "$config" list
+    [[ $output == *'core.token=[redacted]'* ]]
+    [[ $output != *s3cret* ]]
 }
 
 @test "env: export lines, shell-quoted" {
