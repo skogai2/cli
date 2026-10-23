@@ -2,7 +2,7 @@
 type: module
 name: config
 description: layered key-value settings
-command: argc.sh
+command: config
 tools: [yq, argc]
 config.system.dir: config
 config.system.file: config.system.md

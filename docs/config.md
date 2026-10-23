@@ -26,31 +26,23 @@ Every file layer has two parts:
 - override - `.skogai/<path>`, the same path minus `base/`. All writes
   go here.
 
-Where each scope's files live is itself a setting (from `config.md`):
+Where each scope's files live is itself a setting:
 
-| key                       | default            |
-|---------------------------|--------------------|
-| `config.base.dot.dir`     | `.skogai`          |
-| `config.base.defaults.dir`| `base`             |
-| `config.<scope>.dir`      | `config`           |
-| `config.<scope>.file`     | `config.<scope>.md`|
-| `config.base.module.dir`  | `module`           |
-
-Modules live in `.skogai/base/<module.dir>/<name>/`; the config module's
-command is `.skogai/base/module/config/argc.sh`.
-
-A key exists only if some default file declares it. A key can be
-declared as null: it shows up nowhere until a layer sets it, but `set`
-can then use it. (`config.<scope>.file.override`, pointing a scope at an
-absolute file like `/etc/skogai/config.md`, is an example of this.)
+| key                       | default            | set in |
+|---------------------------|--------------------|--------|
+| `config.base.dot.dir`     | `.skogai`          | env only |
+| `config.base.defaults.dir`| `base`             | env only |
+| `config.<scope>.dir`      | `config`           | `config.md` |
+| `config.<scope>.file`     | `config.<scope>.md`| `config.md` |
 
 So the local layer is `.skogai/base/config/config.local.md`, then
-`.skogai/config/config.local.md`. The two `config.base.*` keys can only
-be changed from env, since they say where `config.md` itself is. The dot
-dir is found by walking up from the current directory. Their defaults are
-filled in by the command and listed under ENVIRONMENT VARIABLES in every
-command's help, so their origin shows as `env:`. If a value must be given
-explicitly, the command makes it required instead.
+`.skogai/config/config.local.md`. The two `config.base.*` keys say where
+`config.md` itself is, so only env can change them; their defaults are
+listed under ENVIRONMENT VARIABLES in every command's help. The dot dir
+is found by walking up from the current directory.
+
+A key exists only if some default file declares it. A key declared as
+null shows up nowhere until a layer sets it, but `set` can use it.
 
 A null value removes a key that an earlier layer set.
 
@@ -67,6 +59,7 @@ Env only overrides keys that some file layer defines.
 
 ## commands
 
+The command is `bin/config` in the repo, installed as `skogai-config`.
 All output goes to stdout, errors to stderr. Exit codes:
 
 | code | meaning                                  |
@@ -78,32 +71,36 @@ All output goes to stdout, errors to stderr. Exit codes:
 Examples below assume this state:
 
 ```
-.skogai/base/config.md            core.name: skogai, core.debug: false,
-                                  core.retries: 3, core.tools: [git, yq]
-.skogai/config/config.local.md    core.debug: true
-env                               SKOGAI_CORE_RETRIES=5
+.skogai/base/config/config.system.md   core.name: skogai, core.debug: false,
+                                       core.retries: 3, core.tools: [git, yq]
+.skogai/config/config.local.md         core.debug: true
+env                                    SKOGAI_CORE_RETRIES=5
 ```
+
+`list` and `env` output below leaves out the keys of `config.md` itself
+(`type`, `name`, `config.*`, ...), which show like any other.
 
 ### get
 
 ```
-skogai config get <key> [--show-origin]
+skogai-config get <key> [--show-origin]
 ```
 
 Prints the resolved value of one key. A list prints one item per line.
 
 ```
-$ skogai config get core.name
+$ skogai-config get core.name
 skogai
-$ skogai config get core.tools
+$ skogai-config get core.tools
 git
 yq
-$ skogai config get core.debug --show-origin
+$ skogai-config get core.debug --show-origin
 file:.skogai/config/config.local.md	true
-$ skogai config get core.retries --show-origin
+$ skogai-config get core.retries --show-origin
 env:SKOGAI_CORE_RETRIES	5
-$ skogai config get core.missing
-error: core.missing is not set                           (exit 1)
+$ skogai-config get core.missing
+error: invalid value `core.missing` for `<KEY>`           (exit 1)
+  [possible values: core.debug, core.name, ...]
 ```
 
 With `--show-origin` the line is `<origin><TAB><value>`; a list's items
@@ -112,7 +109,7 @@ are joined by spaces. Origin is `file:<path>` or `env:<NAME>`.
 ### set
 
 ```
-skogai config set <key> <value> [--scope system|global|local]
+skogai-config set <key> <value> [--scope system|global|local]
 ```
 
 Writes a declared key to the override file of a scope, default `local`.
@@ -122,12 +119,11 @@ yaml, so `true`, `52`, `[a, b]` and `null` keep their type. Prints
 nothing.
 
 ```
-$ skogai config set core.retries 7
-$ skogai config set core.tools '[git]' --scope global
-$ skogai config set core.debug null
-$ skogai config get core.debug
-error: core.debug is not set                             (exit 1)
-$ skogai config set 'bad..key' 1
+$ skogai-config set core.retries 7
+$ skogai-config set core.tools '[git]' --scope global
+$ skogai-config set core.debug null
+$ skogai-config get core.debug                           (exit 1)
+$ skogai-config set 'bad..key' 1
 error: invalid value `bad..key` for `<KEY>`               (exit 1)
   [possible values: ...]
 ```
@@ -135,7 +131,7 @@ error: invalid value `bad..key` for `<KEY>`               (exit 1)
 ### unset
 
 ```
-skogai config unset <key> [--scope system|global|local]
+skogai-config unset <key> [--scope system|global|local]
 ```
 
 Removes the key from a scope's override file, default `local`, so the
@@ -143,48 +139,49 @@ value beneath shows through again. Unlike `set <key> null`, it removes
 the change instead of adding a deletion.
 
 ```
-$ skogai config unset core.debug
-$ skogai config get core.debug
+$ skogai-config unset core.debug
+$ skogai-config get core.debug
 false
-$ skogai config unset core.debug
-error: core.debug is not in .skogai/config/config.local.md   (exit 1)
+$ skogai-config unset core.debug
+error: invalid value `core.debug` for `<KEY>`             (exit 1)
+  [possible values: ...keys set in that override]
 ```
 
 ### list
 
 ```
-skogai config list [--show-origin]
+skogai-config list [--show-origin]
 ```
 
 Prints every resolved key as `key=value`, sorted by key. A list prints one
 line per item. Nothing set prints nothing, exit 0.
 
 ```
-$ skogai config list
+$ skogai-config list
 core.debug=true
 core.name=skogai
 core.retries=5
 core.tools=git
 core.tools=yq
-$ skogai config list --show-origin
+$ skogai-config list --show-origin
 file:.skogai/config/config.local.md	core.debug=true
-file:.skogai/base/config.md	core.name=skogai
+file:.skogai/base/config/config.system.md	core.name=skogai
 env:SKOGAI_CORE_RETRIES	core.retries=5
-file:.skogai/base/config.md	core.tools=git
-file:.skogai/base/config.md	core.tools=yq
+file:.skogai/base/config/config.system.md	core.tools=git
+file:.skogai/base/config/config.system.md	core.tools=yq
 ```
 
 ### env
 
 ```
-skogai config env
+skogai-config env
 ```
 
 Prints the resolved config as shell `export` lines, values shell-quoted,
 sorted by key. A list's items are separated by newlines inside the value.
 
 ```
-$ skogai config env
+$ skogai-config env
 export SKOGAI_CORE_DEBUG=true
 export SKOGAI_CORE_NAME=skogai
 export SKOGAI_CORE_RETRIES=5
@@ -194,15 +191,15 @@ export SKOGAI_CORE_TOOLS=$'git\nyq'
 ### files
 
 ```
-skogai config files
+skogai-config files
 ```
 
 Prints each layer file in fold order, and whether it exists.
 
 ```
-$ skogai config files
+$ skogai-config files
 .skogai/base/config.md	present
-.skogai/base/config/config.system.md	missing
+.skogai/base/config/config.system.md	present
 .skogai/config/config.system.md	missing
 .skogai/base/config/config.global.md	missing
 .skogai/config/config.global.md	missing
@@ -212,13 +209,18 @@ $ skogai config files
 
 ## edge cases
 
-- metadata keys (`type`, `name`, `tools`, ...) are keys like any other and
-  show in `list`.
+- metadata keys (`type`, `name`, `tools`, ...) are keys like any other.
 - an empty value or empty list is a value: `get` prints an empty line,
   `list` prints `key=`. It is never shown as its origin.
 - a missing layer file is skipped, not an error.
 - a file without frontmatter is an empty layer.
 - a file with broken frontmatter is exit 2, naming the file.
+
+## tests
+
+`test/config.bats` is this spec as tests; each runs in a fresh `.skogai`
+in a temp dir. `test/install.sh` builds the package and runs the same
+tests against the installed `skogai-config`.
 
 ## open
 
