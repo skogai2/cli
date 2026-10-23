@@ -76,7 +76,8 @@ The ideas the cli is built around. One line each: name - what it means.
 - settings - configuration, read through key-value lookups.
 - scopes - settings come in layers following classic linux rules:
   system, global, local, env. Each layer overrides the one before it, so
-  the most specific wins.
+  the most specific wins. The paths below are where each scope lives on
+  a real machine; by default every scope is read from inside `.skogai`.
   - system - machine-wide, `/etc/skogai`. The base case: the default
     values everything else is applied on top of.
   - global - per user, the xdg layer (`$XDG_CONFIG_HOME/skogai`).
