@@ -72,8 +72,8 @@ All output goes to stdout, errors to stderr. Exit codes:
 | code | meaning                                  |
 |------|------------------------------------------|
 | 0    | ok                                       |
-| 1    | key not set / nothing to remove          |
-| 2    | bad input: unknown command, bad key, unreadable file |
+| 1    | expected no: key not set, nothing to remove, bad input; the possible values go to stderr |
+| 2    | unexpected: broken frontmatter, unreadable file |
 
 Examples below assume this state:
 
@@ -116,7 +116,7 @@ skogai config set <key> <value> [--scope system|global|local]
 ```
 
 Writes a declared key to the override file of a scope, default `local`.
-An undeclared key is exit 2: add it to a default file first. Creates
+An undeclared key is exit 1, listing the declared keys. Creates
 the file if missing. Never touches `.skogai/base/`. The value is read as
 yaml, so `true`, `52`, `[a, b]` and `null` keep their type. Prints
 nothing.
@@ -128,7 +128,8 @@ $ skogai config set core.debug null
 $ skogai config get core.debug
 error: core.debug is not set                             (exit 1)
 $ skogai config set 'bad..key' 1
-error: bad key: bad..key                                 (exit 2)
+error: invalid value `bad..key` for `<KEY>`               (exit 1)
+  [possible values: ...]
 ```
 
 ### unset

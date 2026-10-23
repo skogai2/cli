@@ -113,14 +113,16 @@ md() {
     [ "$status" -eq 1 ]
 }
 
-@test "set: an undeclared key is exit 2" {
+@test "set: an undeclared key is exit 1" {
     run "$config" set core.missing 1
-    [ "$status" -eq 2 ]
+    [ "$status" -eq 1 ]
+    [[ $output == *core.name* ]]
 }
 
-@test "set: a bad key is exit 2" {
+@test "set: a bad key is exit 1" {
     run "$config" set 'bad..key' 1
-    [ "$status" -eq 2 ]
+    [ "$status" -eq 1 ]
+    [ ! -e .skogai/config/config.local.md ]
 }
 
 @test "unset: the value beneath shows through again" {
