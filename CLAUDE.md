@@ -224,9 +224,14 @@ Plan, in build order:
 6. [ ] base snapshot - only once the open question on tracking is
        answered; steps 1-5 do not depend on it.
 
-Decided: in a repo the system layer is the repo's own copy, because every
-location defaults into `.skogai`. Exact subfolder names for each scope are
-still to pick (e.g. system as `.skogai/base`).
+Decided: all default locations are local, by necessity; a sandbox has
+only the repo. In a repo the system layer is the repo's own copy.
+
+Default locations, each a folder holding a git-config file `config`:
+
+- system - `.skogai/base`
+- global - `.skogai/global` (claude's pick)
+- local - `.skogai/local` (claude's pick)
 
 ### later
 
