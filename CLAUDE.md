@@ -49,6 +49,13 @@ The ideas the cli is built around. One line each: name - what it means.
   monolith.
 - command runner - the part that runs commands.
 - settings - configuration, read through key-value lookups.
+- scopes - settings come in layers following classic linux rules:
+  system, global, local, env. Each layer overrides the one before it, so
+  the most specific wins.
+  - system - machine-wide, the `/etc` layer.
+  - global - per user, the xdg layer.
+  - local - per project, a dotfolder in the project.
+  - env - the current process, environment variables.
 
 ## tools
 
