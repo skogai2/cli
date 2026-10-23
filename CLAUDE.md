@@ -245,13 +245,18 @@ Claude's draft plan, not agreed. Steps 1-5 above, made concrete.
 Layout:
 
 - `lib/settings.sh` - the lookup, as a function other bash can source.
-- `bin/skogai` - thin entry point: `skogai get <key> [--type int|bool|path]`.
-  Only `get` for now; the command runner replaces this dispatch later.
+- `bin/skogai` - thin entry point: `skogai get|set|list` (user writes
+  this). The command runner replaces this dispatch later.
 - `.skogai/base/{system,global,local}/config` - this repo's own defaults,
   so the repo uses itself from day one.
 - `test/*.bats` - the tests.
-- `PKGBUILD` - installs `bin/` and `lib/` under `/usr`, and the system
-  defaults as `/etc/skogai/config`, listed as backup so edits survive.
+- `PKGBUILD` (done) - builds from committed HEAD only; version is
+  `r<commit count>.<short sha>`. Installs `bin/*` to `/usr/bin`, `lib/*`
+  to `/usr/lib/skogai/`, and the system defaults as `/etc/skogai/config`,
+  listed as backup so edits survive. Note: `bin/skogai` must find its lib
+  both in the repo (`../lib`) and installed (`../lib/skogai`). No
+  `check()` yet: bats and shellcheck come from mise, not pacman, so
+  makepkg cannot depend on them.
 
 Locations (env only, never from a file):
 
