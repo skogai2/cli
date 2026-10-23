@@ -38,13 +38,17 @@ Allowed sources of truth, in order:
 What the cli is for, in the user's words. Filled in together; empty until
 agreed.
 
-- _(to be described)_
+- A modular framework, combined mainly from two parts: a command runner
+  and settings via key-value lookups.
 
 ## concepts
 
 The ideas the cli is built around. One line each: name - what it means.
 
-- _(to be described)_
+- modular - the framework is made of separate parts that combine, not one
+  monolith.
+- command runner - the part that runs commands.
+- settings - configuration, read through key-value lookups.
 
 ## tools
 
