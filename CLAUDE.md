@@ -238,6 +238,47 @@ there. Each scope is a folder holding a git-config file `config`:
 
 Where runtime values live is not decided yet.
 
+#### first milestone: simple install with tests and a few settings
+
+Claude's draft plan, not agreed. Steps 1-5 above, made concrete.
+
+Layout:
+
+- `lib/settings.sh` - the lookup, as a function other bash can source.
+- `bin/skogai` - thin entry point: `skogai get <key> [--type int|bool|path]`.
+  Only `get` for now; the command runner replaces this dispatch later.
+- `.skogai/base/{system,global,local}/config` - this repo's own defaults,
+  so the repo uses itself from day one.
+- `test/*.bats` - the tests.
+- `PKGBUILD` - installs `bin/` and `lib/` under `/usr`, and the system
+  defaults as `/etc/skogai/config`, listed as backup so edits survive.
+
+Locations (env only, never from a file):
+
+- `SKOGAI_ROOT` - the project root; default: the git top level.
+- `SKOGAI_SYSTEM_CONFIG_DIR`, `SKOGAI_GLOBAL_CONFIG_DIR`,
+  `SKOGAI_LOCAL_CONFIG_DIR` - default `$SKOGAI_ROOT/.skogai/base/<scope>`.
+
+A few settings, one per type, as placeholders to exercise the lookup:
+
+- `core.name` (string) = `skogai`
+- `core.debug` (bool) = `false`
+- `core.retries` (int) = `3`
+- `core.logdir` (path) = `.skogai/logs`
+
+Tests, each in a fresh relocated setup:
+
+- a key set only in system returns the system default.
+- global overrides system; local overrides global; env overrides all.
+- relocating any scope via its location env is honoured.
+- an unknown key fails with a clear error and non-zero exit.
+- `--type` rejects a bad int or bool, and normalises a path.
+- the lookup works with only the repo present (no `/etc/skogai`, no xdg).
+- `shellcheck` passes on `bin/` and `lib/`.
+
+Done when: all tests pass, `makepkg` builds the package, and installing it
+gives a working `skogai get` that reads `/etc/skogai` when told to via env.
+
 ### later
 
 - _(captured as intentions surface; not planned until phase 1 is done)_
