@@ -36,13 +36,34 @@ Allowed sources of truth, in order:
   the sections below right away, in short form, so the broad basics can be
   reviewed at a glance.
 
-## intentions
+## goals
 
-What the cli is for, in the user's words. Filled in together; empty until
-agreed.
+What skogai is meant to be when it is done. Concepts only; how each is
+reached is decided in the sections below.
 
-- A modular framework, combined mainly from two parts: a command runner
-  and settings via key-value lookups.
+1. A repo is enough. Everything an agent needs to work travels with the
+   repo. A sandbox with only the repo checked out behaves the same as the
+   user's machine.
+2. State is a diff on a base. Every setting has a default; every change is
+   applied on top of it and can be removed again.
+3. Layers, most specific wins. System, global, local, then the running
+   process, each applied on the one before. It is always possible to tell
+   which layer a value came from.
+4. Defaults stay apart from changes. Use never edits the base; changes
+   live beside it.
+5. The base has a point in time. A repo knows which version of the base
+   it carries, and moving it forward is a deliberate, reviewed step.
+6. Everything describes itself. Modules and commands carry their own
+   description, what they need, what they build on, and their defaults.
+   Docs and behaviour live together.
+7. Modular. Small parts that combine; a repo takes only what it needs.
+8. Nothing is fixed but the starting point. Even where things live is a
+   setting.
+9. Use what exists. Build on established systems instead of reinventing
+   them.
+10. Tested as real. A test is the real setup, moved somewhere else.
+11. Installed as a version. skogai itself is installed and upgraded as a
+    versioned package.
 
 ## the core question
 
