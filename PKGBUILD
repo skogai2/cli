@@ -6,10 +6,10 @@
 pkgname=skogai
 pkgver=0.0.1
 pkgrel=1
-pkgdesc='modular framework: a command runner and layered key-value settings'
+pkgdesc='modular framework: argc commands, settings held by mise'
 arch=('any')
 license=('unknown')
-depends=('bash' 'go-yq')  # also argc, not in the official repos
+depends=('bash' 'go-yq' 'mise')  # also argc, not in the official repos
 makedepends=('git')
 source=("$pkgname::git+file://$startdir")
 sha256sums=('SKIP')
@@ -24,9 +24,10 @@ package() {
   cd "$pkgname"
 
   # the base a repo copies into its .skogai/base
-  install -Dm644 .skogai/base/config.md "$pkgdir/usr/share/skogai/base/config.md"
-
   local f
+  while IFS= read -r f; do
+    install -Dm644 "$f" "$pkgdir/usr/share/skogai/base/${f#.skogai/base/}"
+  done < <(git ls-files .skogai/base)
   for f in bin/*; do
     if [[ -f $f ]]; then
       install -Dm755 "$f" "$pkgdir/usr/bin/skogai-${f#bin/}"
