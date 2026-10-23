@@ -25,6 +25,9 @@ Allowed sources of truth, in order:
   intent is written in the roadmap below and agreed on.
 - Describe concepts, not mechanisms. An intent says *what* and *why*, not
   which tool, file layout, or library does it.
+- Trust existing systems. Where a system already solves something
+  (pacman for installs and versions, git for history), use it instead of
+  reinventing the wheel.
 - Small steps. Each roadmap item should be buildable and checkable on its
   own.
 - `tmp/` is throwaway scratch space and is gitignored.
@@ -118,6 +121,13 @@ That is, the repo carries skogai itself, not only settings.
 - con: repos drift from the pacman-installed version; which one runs when
   both exist?
 - con: updates happen per repo instead of once per machine.
+
+Leaning (agreed in direction): the repo-level install is the local layer
+of the install, applied over the system install like any other scope, so
+the scope rule decides which runs. How pacman handles this is to be found
+out, not reinvented. Known so far: pacman installs to one root with one
+database by default, but can target another root and database, which
+could make a repo-level install a pacman install too.
 
 ## roadmap
 
