@@ -193,7 +193,7 @@ Each phase lists the intent it serves and how we know it is done.
 - [x] language/runtime: bash
 - [x] settings file format: git config
 - [x] key naming, and how a key maps to an env variable
-- [ ] how `.skogai/base` tracks its point in time
+- [ ] how `.skogai/base` tracks its point in time (can wait; see phase 1)
 - [x] what "done" means
 
 ### phase 1 - settings
@@ -203,12 +203,27 @@ only is deliberate: it forces the questions about how things are applied
 to be answered before commands or bigger ideas are built on top. See open
 questions.
 
-- [ ] location settings for each scope, with defaults
-- [ ] key-value lookup across system, global, local, env
-- [ ] test setup: the real layered setup, relocated to a local folder
-- [ ] every key has a default from the system layer
-- [ ] a repo carries its base snapshot
-- [ ] installed as a pacman package that owns `/etc/skogai`
+Plan, in build order:
+
+1. [ ] skeleton - one bash entry point that answers "what is the value of
+       this key", typed (int, bool, path, string). shellcheck clean.
+2. [ ] location settings - one per scope, env or default only:
+       system `/etc/skogai`, global `$XDG_CONFIG_HOME/skogai`,
+       local `.skogai` in the project root.
+3. [ ] layered lookup - env, then local, then global, then system; first
+       hit wins. A key with no value anywhere is an error, since every key
+       must have a default.
+4. [ ] test setup - bats; each test points the location settings at a
+       fresh local folder and runs the real lookup there.
+5. [ ] package - a PKGBUILD that installs the entry point and owns
+       `/etc/skogai` as config, so local edits survive upgrades.
+6. [ ] base snapshot - only once the open question on tracking is
+       answered; steps 1-5 do not depend on it.
+
+Decide before step 3: in a repo, is the system layer the live
+`/etc/skogai` or the repo's base snapshot? Leaning snapshot, so the repo
+behaves the same everywhere; with locations as settings that may just be
+the system location's default inside a repo.
 
 ### later
 
