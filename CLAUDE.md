@@ -88,7 +88,8 @@ The ideas the cli is built around. One line each: name - what it means.
 - every key has a default - no key-value exists without a base value, so
   a lookup always has an answer.
 - base snapshot - each repo carries a copy of the base state as it was at
-  a point in time: the last clone, update, or sync of that repo.
+  a point in time: the last clone, update, or sync of that repo. It lives
+  in `.skogai/base/`, which holds defaults only, never runtime values.
 
 ## tools
 
@@ -227,15 +228,15 @@ Plan, in build order:
 Decided: all default locations are local, by necessity; a sandbox has
 only the repo. In a repo the system layer is the repo's own copy.
 
-Default locations are defaults, not runtime values: they only say where
-to look when nothing overrides them. They are relative to one root folder,
-`.skogai` in the project, so moving the root moves them all (a test only
-needs to set the root). Each is a folder holding a git-config file
-`config`:
+Default locations all live under one subfolder, `.skogai/base/`. It holds
+the defaults, not runtime values; everything related to defaults goes
+there. Each scope is a folder holding a git-config file `config`:
 
-- system - `base/`
-- global - `global/` (claude's pick)
-- local - `local/` (claude's pick)
+- system - `.skogai/base/system`
+- global - `.skogai/base/global`
+- local - `.skogai/base/local`
+
+Where runtime values live is not decided yet.
 
 ### later
 
