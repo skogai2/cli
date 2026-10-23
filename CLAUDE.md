@@ -227,11 +227,15 @@ Plan, in build order:
 Decided: all default locations are local, by necessity; a sandbox has
 only the repo. In a repo the system layer is the repo's own copy.
 
-Default locations, each a folder holding a git-config file `config`:
+Default locations are defaults, not runtime values: they only say where
+to look when nothing overrides them. They are relative to one root folder,
+`.skogai` in the project, so moving the root moves them all (a test only
+needs to set the root). Each is a folder holding a git-config file
+`config`:
 
-- system - `.skogai/base`
-- global - `.skogai/global` (claude's pick)
-- local - `.skogai/local` (claude's pick)
+- system - `base/`
+- global - `global/` (claude's pick)
+- local - `local/` (claude's pick)
 
 ### later
 
