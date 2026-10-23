@@ -99,6 +99,26 @@ Open thought (not agreed): a repo's base snapshot could record which
 package version it was taken from, so "base state at a point in time" has
 a name.
 
+## open questions
+
+Questions config-first forces us to answer. Pros and cons are a first
+take, not agreed.
+
+### should `.skogai/src` apply the install on a repo level?
+
+That is, the repo carries skogai itself, not only settings.
+
+- pro: answers the core question directly; a sandbox with only the repo
+  still has skogai.
+- pro: the version is pinned per repo, so the repo behaves the same
+  everywhere.
+- pro: fits the base snapshot; the install becomes part of the state at
+  a point in time.
+- con: every repo carries a copy; duplication and repo size.
+- con: repos drift from the pacman-installed version; which one runs when
+  both exist?
+- con: updates happen per repo instead of once per machine.
+
 ## roadmap
 
 Each phase lists the intent it serves and how we know it is done.
@@ -112,7 +132,10 @@ Each phase lists the intent it serves and how we know it is done.
 
 ### phase 1 - settings
 
-Settings alone are a starting point on their own.
+Settings alone are a starting point on their own. Starting with config
+only is deliberate: it forces the questions about how things are applied
+to be answered before commands or bigger ideas are built on top. See open
+questions.
 
 - [ ] key-value lookup across system, global, local, env
 - [ ] every key has a default from the system layer
