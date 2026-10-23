@@ -100,6 +100,20 @@ What the cli uses or works with, and why. One line each: tool - its role.
   `/etc/skogai`, so the base case (system defaults) arrives and updates
   as a package version.
 
+- argc - the command runner. A script describes its own interface in
+  comments (`@describe`, `@cmd`, `@option`, `@arg`, `@env` with defaults)
+  and ends with `eval "$(argc --argc-eval "$0" "$@")"`. argc turns those
+  comments into the parsing, help, errors, completions and env defaults;
+  the script itself is only functions. Same idea as a module's
+  frontmatter: the file describes itself.
+- yq - reads and writes markdown frontmatter.
+
+Example to remake (`tmp/config/argc.sh`): `get`, `set`, `unset`, `list`,
+`env`, `files`. Locations are `@env` settings with local defaults:
+`SKOGAI_SYSTEM_DIR`, `SKOGAI_CONFIG_DIR` (global), `SKOGAI_LOCAL_DIR`.
+Fold order, later wins: module defaults, system, global, local,
+`module.local.md`, `--file` layers, env.
+
 Open thought (not agreed): a repo's base snapshot could record which
 package version it was taken from, so "base state at a point in time" has
 a name.
