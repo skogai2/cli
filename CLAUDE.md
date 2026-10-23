@@ -148,9 +148,13 @@ Each phase lists the intent it serves and how we know it is done.
 ### phase 0 - foundation
 
 - [x] empty repo, clean-room rule written down
-- [ ] intentions above described and agreed
+- [x] intentions above described and agreed (broad basics)
+- [ ] general tooling and preferences written down
 - [ ] choose language/runtime from the intentions, not from habit
-- [ ] decide what "done" means for a command (tests, docs, help text)
+- [ ] settings file format (prefer an existing one)
+- [ ] key naming, and how a key maps to an env variable
+- [ ] where the base snapshot lives in `.skogai`
+- [ ] decide what "done" means (tests, docs, help text)
 
 ### phase 1 - settings
 
