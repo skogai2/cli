@@ -25,7 +25,7 @@ Sources of truth, in order:
 - Intent before implementation. Nothing is built until its intent is
   written down and agreed.
 - Describe concepts, not mechanisms.
-- Use what exists (pacman, git, argc, yq) instead of reinventing it.
+- Use what exists (pacman, git, argc, mise, yq) instead of reinventing it.
 - Small steps, each buildable and checkable on its own.
 - Write it down as we talk: settled decisions go into this file or
   `docs/` right away.
@@ -62,7 +62,12 @@ sandboxes with only a project repo checked out?
 
 ## how it is built
 
-- bash, argc as the command runner, yq for markdown frontmatter.
+- bash, argc as the command runner, mise for settings, yq for markdown
+  frontmatter.
+- argc first: whatever argc comments can express (usage, help,
+  validation, defaults, choices, env, completion, required tools) is
+  written as comments, never as bash.
+- Settings are mise's, in the `skogai` env. See `docs/config.md`.
 - A command is an argc script that describes its own interface in
   comments. Shared helpers live in `lib/`; argc needs `_choice_*`
   functions in the script itself, so those stay in `bin/`.
@@ -87,7 +92,8 @@ sandboxes with only a project repo checked out?
 
 ## modules
 
-- config - layered key-value settings. Spec: `docs/config.md`.
+- config - settings, held by mise. Decisions: `docs/config.md`; the
+  0.0.1 implementation in `bin/config` is to be replaced.
 
 ## testing
 
@@ -109,6 +115,9 @@ A thing is done when its spec, tests and help text agree.
 - [x] pacman package
 
 ### next
+
+- config on mise: settle the open points in `docs/config.md`, then
+  shrink or drop `bin/config`
 
 - the runner: a `skogai` command that runs a module's `command`
 - how a repo copies the installed base and records its version
