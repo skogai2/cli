@@ -34,20 +34,23 @@ Where each scope's files live is itself a setting (from `config.md`):
 | `config.base.defaults.dir`| `base`             |
 | `config.<scope>.dir`      | `config`           |
 | `config.<scope>.file`     | `config.<scope>.md`|
-| `config.<scope>.file.override` | null          |
 | `config.base.module.dir`  | `module`           |
 
 Modules live in `.skogai/base/<module.dir>/<name>/`; the config module's
 command is `.skogai/base/module/config/argc.sh`.
 
-`config.<scope>.file.override` is how a machine points a scope at an
-absolute file, e.g. `config.system.file.override: /etc/skogai/config.md`
-set in the local override. Null by default, so it does nothing in a
-sandbox.
+A key exists only if some default file declares it. A key can be
+declared as null: it shows up nowhere until a layer sets it, but `set`
+can then use it. (`config.<scope>.file.override`, pointing a scope at an
+absolute file like `/etc/skogai/config.md`, is an example of this.)
 
 So the local layer is `.skogai/base/config/config.local.md`, then
 `.skogai/config/config.local.md`. The two `config.base.*` keys can only
-be changed from env, since they say where `config.md` itself is.
+be changed from env, since they say where `config.md` itself is. The dot
+dir is found by walking up from the current directory. Their defaults are
+filled in by the command and listed under ENVIRONMENT VARIABLES in every
+command's help, so their origin shows as `env:`. If a value must be given
+explicitly, the command makes it required instead.
 
 A null value removes a key that an earlier layer set.
 
@@ -104,9 +107,7 @@ error: core.missing is not set                           (exit 1)
 ```
 
 With `--show-origin` the line is `<origin><TAB><value>`; a list's items
-are joined by spaces. Origin is `file:<path>` or `env:<NAME>`. A value
-only shows `env:` if the env variable was actually set by the caller, not
-when it is a default the command filled in itself.
+are joined by spaces. Origin is `file:<path>` or `env:<NAME>`.
 
 ### set
 
@@ -114,7 +115,8 @@ when it is a default the command filled in itself.
 skogai config set <key> <value> [--scope system|global|local]
 ```
 
-Writes the key to the override file of a scope, default `local`. Creates
+Writes a declared key to the override file of a scope, default `local`.
+An undeclared key is exit 2: add it to a default file first. Creates
 the file if missing. Never touches `.skogai/base/`. The value is read as
 yaml, so `true`, `52`, `[a, b]` and `null` keep their type. Prints
 nothing.
@@ -219,8 +221,6 @@ $ skogai config files
 
 ## open
 
-- whether `config.<scope>.file.override` replaces the scope's override
-  file or adds a layer after it.
 - `--file` extra layers, and keys mounted under a module's name, from the
   example script: not in this spec yet.
 - path as a type: a convention for now, no checking.
