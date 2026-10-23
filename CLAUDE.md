@@ -155,7 +155,8 @@ Agreed overall, from claude's first assumptions and the user's answers.
 - keys - lowercase, dotted (`section.key`). Env is `SKOGAI_` + uppercase
   with `.` as `_`. Watch: clashes if `_` is also a relation in names.
 - locations are settings - where each scope is read from is itself a
-  setting with a default, e.g. `SKOGAI_SYSTEM_CONFIG_DIR=/etc/skogai`.
+  setting with a default inside the repo's `.skogai`; the machine
+  overrides it via env, e.g. `SKOGAI_SYSTEM_CONFIG_DIR=/etc/skogai`.
   Location keys can only come from env or their default, since a file
   cannot say where files are.
 - tests run against a real setup - point the location settings at a
@@ -207,9 +208,11 @@ Plan, in build order:
 
 1. [ ] skeleton - one bash entry point that answers "what is the value of
        this key", typed (int, bool, path, string). shellcheck clean.
-2. [ ] location settings - one per scope, env or default only:
-       system `/etc/skogai`, global `$XDG_CONFIG_HOME/skogai`,
-       local `.skogai` in the project root.
+2. [ ] location settings - one per scope, env or default only. Every
+       default points inside the repo's `.skogai`, so each new setup is
+       complete on the local repo side. Real machine paths are opt-in:
+       on the user's machine, env overrides them (e.g.
+       `SKOGAI_SYSTEM_CONFIG_DIR=/etc/skogai`) where needed.
 3. [ ] layered lookup - env, then local, then global, then system; first
        hit wins. A key with no value anywhere is an error, since every key
        must have a default.
@@ -220,10 +223,9 @@ Plan, in build order:
 6. [ ] base snapshot - only once the open question on tracking is
        answered; steps 1-5 do not depend on it.
 
-Decide before step 3: in a repo, is the system layer the live
-`/etc/skogai` or the repo's base snapshot? Leaning snapshot, so the repo
-behaves the same everywhere; with locations as settings that may just be
-the system location's default inside a repo.
+Decided: in a repo the system layer is the repo's own copy, because every
+location defaults into `.skogai`. Exact subfolder names for each scope are
+still to pick (e.g. system as `.skogai/base`).
 
 ### later
 
