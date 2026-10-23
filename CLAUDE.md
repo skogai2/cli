@@ -214,6 +214,23 @@ How it fits what is already decided:
 - env names: `.` becomes `_`, `-` is dropped, `_` in a key reads as `-`.
 - cost: yq (and argc) must exist where it runs, not only git.
 
+### base mirrors `.skogai` (direction)
+
+`.skogai/base/<path>` is the default; `.skogai/<path>` is its override.
+The same relative path, minus `base/`. So `base/` is a full mirror of
+`.skogai`, and everything outside `base/` is a diff applied on top. This
+is where runtime values live, and it replaces the `x.local.md` idea.
+
+Every part of every location is itself a setting with a default
+(`.skogai/base/config.md`):
+
+- `config.base.dot.dir` = `.skogai`, `config.base.defaults.dir` = `base`
+- `config.<scope>.dir` = `config`, `config.<scope>.file` =
+  `config.<scope>.md`, for system, global, local
+
+The only fixed point is finding `.skogai/base/config.md` itself, so the
+two `config.base.*` keys can only be changed from env.
+
 ### how does `.skogai/base` track its point in time?
 
 First assumption: a plain copy of `/etc/skogai` plus the package version
