@@ -141,6 +141,23 @@ arch base, never inside a sandbox.
 - not ideal: in a perfect world upgrades would not need a human. Accepted
   to start; to be revisited later.
 
+### first assumptions for phase 0 (claude's, not agreed)
+
+- tooling - arch, git, pacman/makepkg; scripts in bash, not fish, so they
+  run anywhere; shellcheck.
+- language - bash for phase 1: the only runtime a bare sandbox is sure to
+  have. Revisit if settings outgrow it.
+- format - git-config format, read with `git config --file`: an existing,
+  tested key-value lookup available wherever git is. Line-based, so the
+  git diff is the state diff.
+- keys - lowercase, dotted (`section.key`). Env is `SKOGAI_` + uppercase
+  with `.` as `_`. Watch: clashes if `_` is also a relation in names.
+- base snapshot - `.skogai/base/`, a frozen copy of `/etc/skogai` plus
+  the package version it came from. Upgrade = refresh it and commit; the
+  diff is what gets reviewed.
+- done - tests that run with only the repo (bats, against a fake root),
+  help text, and a line in this file.
+
 ## roadmap
 
 Each phase lists the intent it serves and how we know it is done.
