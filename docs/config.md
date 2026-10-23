@@ -221,6 +221,8 @@ $ skogai config files
 
 ## open
 
-- `--file` extra layers, and keys mounted under a module's name, from the
-  example script: not in this spec yet.
-- path as a type: a convention for now, no checking.
+- extra file layers and keys mounted under a module's name: later, as
+  modules of their own (e.g. reading values when a file is read, to
+  change the markdown dynamically). Not part of the basics.
+- types beyond yaml's (path, ...): later, as a type module using argc's
+  runtime validation.
