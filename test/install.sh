@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # build the package from HEAD, unpack it into a temp root, and run the
-# config tests against what pacman would install. needs nothing installed.
+# config tests against what pacman would install. -d: deps are checked by
+# the tests themselves, they may come from mise rather than pacman.
 set -euo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
@@ -8,7 +9,7 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
 cd "$repo"
-BUILDDIR=$work/build SRCDEST=$work/src PKGDEST=$work/pkg makepkg -f --noconfirm >/dev/null
+BUILDDIR=$work/build SRCDEST=$work/src PKGDEST=$work/pkg makepkg -fd --noconfirm >/dev/null
 git checkout -q PKGBUILD # makepkg rewrites pkgver
 
 mkdir "$work/root"
