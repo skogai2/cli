@@ -34,6 +34,16 @@ Where each scope's files live is itself a setting (from `config.md`):
 | `config.base.defaults.dir`| `base`             |
 | `config.<scope>.dir`      | `config`           |
 | `config.<scope>.file`     | `config.<scope>.md`|
+| `config.<scope>.file.override` | null          |
+| `config.base.module.dir`  | `module`           |
+
+Modules live in `.skogai/base/<module.dir>/<name>/`; the config module's
+command is `.skogai/base/module/config/argc.sh`.
+
+`config.<scope>.file.override` is how a machine points a scope at an
+absolute file, e.g. `config.system.file.override: /etc/skogai/config.md`
+set in the local override. Null by default, so it does nothing in a
+sandbox.
 
 So the local layer is `.skogai/base/config/config.local.md`, then
 `.skogai/config/config.local.md`. The two `config.base.*` keys can only
@@ -94,7 +104,9 @@ error: core.missing is not set                           (exit 1)
 ```
 
 With `--show-origin` the line is `<origin><TAB><value>`; a list's items
-are joined by spaces. Origin is `file:<path>` or `env:<NAME>`.
+are joined by spaces. Origin is `file:<path>` or `env:<NAME>`. A value
+only shows `env:` if the env variable was actually set by the caller, not
+when it is a default the command filled in itself.
 
 ### set
 
@@ -197,6 +209,8 @@ $ skogai config files
 
 ## edge cases
 
+- metadata keys (`type`, `name`, `tools`, ...) are keys like any other and
+  show in `list`.
 - an empty value or empty list is a value: `get` prints an empty line,
   `list` prints `key=`. It is never shown as its origin.
 - a missing layer file is skipped, not an error.
@@ -205,11 +219,8 @@ $ skogai config files
 
 ## open
 
-- relative vs absolute location paths: on a machine, system should be
-  `/etc/skogai`; how an absolute `config.system.dir` combines with the
-  base/override pair is not decided.
-- whether metadata keys (`type`, `name`, `tools`, ...) show in `list`, or
-  only settings.
+- whether `config.<scope>.file.override` replaces the scope's override
+  file or adds a layer after it.
 - `--file` extra layers, and keys mounted under a module's name, from the
   example script: not in this spec yet.
 - path as a type: a convention for now, no checking.
