@@ -67,9 +67,8 @@ sandboxes with only a project repo checked out?
 - argc first: whatever argc comments can express (usage, help,
   validation, defaults, choices, env, completion, required tools) is
   written as comments, never as bash.
-- A setting is an argc option bound to a `SKOGAI_*` env var, its
-  default in the comment; mise layers its value in the `skogai` env.
-  See `docs/config.md`.
+- Settings are `SKOGAI_*` vars in mise's `skogai` env; `skogai-config`
+  reads and writes them by key. See `docs/config.md`.
 - A command is an argc script that describes its own interface in
   comments. Shared helpers live in `lib/`; argc needs `_choice_*`
   functions in the script itself, so those stay in `bin/`.
@@ -94,14 +93,14 @@ sandboxes with only a project repo checked out?
 
 ## modules
 
-- config - settings: argc options bound to env, layered by mise. Spec:
+- config - layered key-value settings, held by mise. Spec:
   `docs/config.md`.
 
 ## testing
 
 - `bats test/` - every spec against the repo.
 - `test/install.sh` - builds the package from HEAD, unpacks it into a
-  temp root, and checks it holds the repo's base and commands.
+  temp root, and runs the same tests against the installed commands.
 - `shellcheck -x bin/* lib/*.sh test/*.sh` - clean.
 
 A thing is done when its spec, tests and help text agree.
@@ -118,9 +117,8 @@ A thing is done when its spec, tests and help text agree.
 
 ### 0.0.2 - config on mise
 
-- [x] a setting is an argc option bound to env, default in the comment
-- [x] layers, set, unset and origin from mise's `skogai` env
-- [x] the 0.0.1 store and `bin/config` removed
+- [x] `skogai-config` keeps its interface; mise holds the values
+- [x] base is the committed `mise.skogai.toml`, writes go beside it
 
 ### next
 

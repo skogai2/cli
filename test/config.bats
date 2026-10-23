@@ -1,95 +1,139 @@
 #!/usr/bin/env bats
-# docs/config.md as tests: a setting is an argc option bound to a SKOGAI_*
-# env var, and mise's skogai env layers its value. each test runs in a
-# fresh project with its own system and global mise config.
+# docs/config.md as tests. each test runs bin/config in a fresh project,
+# with its own system and global mise config: the real setup, moved
+# somewhere else.
 
 setup() {
-    local t=$BATS_TEST_TMPDIR
-    mkdir -p "$t/etc" "$t/home/.config/mise" "$t/proj/sub"
+    local repo t=$BATS_TEST_TMPDIR
+    repo="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
+    mkdir -p "$t/etc" "$t/home/.config/mise" "$t/proj"
     export HOME=$t/home MISE_CONFIG_DIR=$t/home/.config/mise \
         MISE_SYSTEM_CONFIG_DIR=$t/etc MISE_TRUSTED_CONFIG_PATHS=$t \
         MISE_STATE_DIR=$t/state MISE_CACHE_DIR=$t/cache MISE_ENV=skogai
-    unset SKOGAI_GREETING SKOGAI_MODE
+    unset "${!SKOGAI_@}"
     cd "$t/proj"
-    # a command with two settings, as every command declares them
-    cat >"$t/greet" <<'EOF'
-#!/usr/bin/env bash
-# @describe Say something
-# @option --greeting=hello $SKOGAI_GREETING  What to say
-# @option --mode[=dev|prod] $SKOGAI_MODE     How to say it
-main() { echo "$argc_greeting $argc_mode"; }
-eval "$(argc --argc-eval "$0" "$@")"
-EOF
-    chmod +x "$t/greet"
+    # SKOGAI_TEST_ROOT: an unpacked package, to test the install instead
+    if [[ -n ${SKOGAI_TEST_ROOT:-} ]]; then
+        config=$SKOGAI_TEST_ROOT/usr/bin/skogai-config
+    else
+        config=$repo/bin/config
+    fi
+    # the project's base: declared keys and their defaults
+    printf '%s\n' '[env]' 'SKOGAI_CORE_NAME = "skogai"' \
+        'SKOGAI_CORE_DEBUG = "false"' 'SKOGAI_CORE_RETRIES = "3"' \
+        'SKOGAI_CORE_EMPTY = ""' >mise.skogai.toml
 }
 
-greet() { mise x -- "$BATS_TEST_TMPDIR/greet" "$@"; }
-
-@test "the command's own default when nothing is set" {
-    run greet
-    [ "$output" = "hello dev" ]
+@test "get: a default from the base" {
+    run "$config" get core.name
+    [ "$status" -eq 0 ]
+    [ "$output" = skogai ]
 }
 
-@test "help shows each setting's default and env name" {
-    run "$BATS_TEST_TMPDIR/greet" -h
-    [[ $output == *"[default: hello] [env: SKOGAI_GREETING]"* ]]
-    [[ $output == *"[possible values: dev, prod]"* ]]
+@test "get: --show-origin names the file" {
+    run "$config" get core.name --show-origin
+    [[ $output == file:*mise.skogai.toml$'\t'skogai ]]
 }
 
-@test "system, then global, then project, then local" {
-    echo -e '[env]\nSKOGAI_GREETING = "system"' >"$MISE_SYSTEM_CONFIG_DIR/config.toml"
-    run greet
-    [ "$output" = "system dev" ]
-    mise set --global SKOGAI_GREETING=global
-    run greet
-    [ "$output" = "global dev" ]
-    mise set --file mise.skogai.toml SKOGAI_GREETING=project
-    run greet
-    [ "$output" = "project dev" ]
-    mise set --file mise.skogai.local.toml SKOGAI_GREETING=local
-    run greet
-    [ "$output" = "local dev" ]
+@test "get: system, then global, then base, then local" {
+    local layer f
+    for layer in system global base local; do
+        case $layer in
+        system) f=$MISE_SYSTEM_CONFIG_DIR/config.skogai.toml ;;
+        global) f=$MISE_CONFIG_DIR/config.skogai.toml ;;
+        base) f=mise.skogai.toml ;;
+        local) f=mise.skogai.local.toml ;;
+        esac
+        mise set -q --file "$f" SKOGAI_CORE_LEVEL="$layer"
+        run "$config" get core.level
+        [ "$output" = "$layer" ]
+    done
 }
 
-@test "a flag wins over every file" {
-    mise set --file mise.skogai.local.toml SKOGAI_GREETING=local
-    run greet --greeting flag
-    [ "$output" = "flag dev" ]
+@test "get: local wins over the base" {
+    "$config" set core.retries 5
+    run "$config" get core.retries --show-origin
+    [[ $output == file:*mise.skogai.local.toml$'\t'5 ]]
 }
 
-@test "unset removes a change, the value beneath shows through" {
-    mise set --file mise.skogai.toml SKOGAI_GREETING=project
-    mise set --file mise.skogai.local.toml SKOGAI_GREETING=local
-    mise unset --file mise.skogai.local.toml SKOGAI_GREETING
-    run greet
-    [ "$output" = "project dev" ]
+@test "get: env wins over every file" {
+    "$config" set core.retries 5
+    SKOGAI_CORE_RETRIES=9 run "$config" get core.retries --show-origin
+    [ "$output" = $'env:SKOGAI_CORE_RETRIES\t9' ]
 }
 
-@test "list shows each value and the file it came from" {
-    mise set --file mise.skogai.toml SKOGAI_GREETING=project
-    run mise set
-    [[ $output == *SKOGAI_GREETING*project*"/proj/mise.skogai.toml"* ]]
+@test "get: an unknown key is exit 1" {
+    run "$config" get core.missing
+    [ "$status" -eq 1 ]
+    [[ $output == *core.name* ]]
 }
 
-@test "found from a subdir" {
-    mise set --file mise.skogai.toml SKOGAI_GREETING=project
-    cd sub
-    run greet
-    [ "$output" = "project dev" ]
+@test "get: an empty value is empty" {
+    run "$config" get core.empty
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
 }
 
-@test "a value outside the choices is rejected, naming them" {
-    mise set --file mise.skogai.toml SKOGAI_MODE=loud
-    run greet
-    [ "$status" -ne 0 ]
-    [[ $output == *"possible values: dev, prod"* ]]
+@test "get: found by walking up from a subdir" {
+    mkdir -p deep/er
+    cd deep/er
+    run "$config" get core.name
+    [ "$output" = skogai ]
 }
 
-@test "skogai settings stay out of the project's own mise.toml" {
-    echo -e '[env]\nSKOGAI_GREETING = "plain"' >mise.toml
-    mise set --file mise.skogai.toml SKOGAI_GREETING=project
-    run greet
-    [ "$output" = "project dev" ]
-    run env -u MISE_ENV mise x -- "$BATS_TEST_TMPDIR/greet"
-    [ "$output" = "plain dev" ]
+@test "set: writes the local file, never the base" {
+    run "$config" set core.retries 7
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+    run "$config" get core.retries
+    [ "$output" = 7 ]
+    grep -q 'SKOGAI_CORE_RETRIES = "3"' mise.skogai.toml
+}
+
+@test "set: --scope picks the file" {
+    "$config" set core.retries 7 --scope global
+    [ -f "$MISE_CONFIG_DIR/config.skogai.toml" ]
+    [ ! -f mise.skogai.local.toml ]
+}
+
+@test "set: an undeclared key is exit 1" {
+    run "$config" set core.missing 1
+    [ "$status" -eq 1 ]
+    [[ $output == *core.name* ]]
+    [ ! -e mise.skogai.local.toml ]
+}
+
+@test "unset: the value beneath shows through again" {
+    "$config" set core.debug true
+    run "$config" unset core.debug
+    [ "$status" -eq 0 ]
+    run "$config" get core.debug
+    [ "$output" = false ]
+}
+
+@test "unset: nothing to remove is exit 1" {
+    run "$config" unset core.debug
+    [ "$status" -eq 1 ]
+}
+
+@test "list: key=value, sorted" {
+    run "$config" list
+    [ "$status" -eq 0 ]
+    [ "$output" = $'core.debug=false\ncore.empty=\ncore.name=skogai\ncore.retries=3' ]
+}
+
+@test "env: export lines, shell-quoted" {
+    "$config" set core.name 'two words'
+    run "$config" env
+    [[ $output == *'export SKOGAI_CORE_NAME=two\ words'* ]]
+}
+
+@test "files: every scope in fold order" {
+    "$config" set core.debug true
+    run "$config" files
+    [ "$output" = "$(printf '%s\t%s\n' \
+        "$MISE_SYSTEM_CONFIG_DIR/config.skogai.toml" missing \
+        "$MISE_CONFIG_DIR/config.skogai.toml" missing \
+        mise.skogai.toml present \
+        mise.skogai.local.toml present)" ]
 }
