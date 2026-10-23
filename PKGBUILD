@@ -9,9 +9,8 @@ pkgrel=1
 pkgdesc='modular framework: a command runner and layered key-value settings'
 arch=('any')
 license=('unknown')
-depends=('bash' 'git')
+depends=('bash' 'go-yq')  # also argc, not in the official repos
 makedepends=('git')
-backup=('etc/skogai/config')
 source=("$pkgname::git+file://$startdir")
 sha256sums=('SKIP')
 
@@ -23,13 +22,13 @@ pkgver() {
 package() {
   cd "$pkgname"
 
-  # system defaults become the machine's system scope
-  install -Dm644 .skogai/base/system/config "$pkgdir/etc/skogai/config"
+  # the base a repo copies into its .skogai/base
+  install -Dm644 .skogai/base/config.md "$pkgdir/usr/share/skogai/base/config.md"
 
   local f
   for f in bin/*; do
     if [[ -f $f ]]; then
-      install -Dm755 "$f" "$pkgdir/usr/bin/${f#bin/}"
+      install -Dm755 "$f" "$pkgdir/usr/bin/skogai-${f#bin/}"
     fi
   done
   for f in lib/*; do

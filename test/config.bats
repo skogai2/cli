@@ -1,15 +1,20 @@
 #!/usr/bin/env bats
-# docs/config.md as tests. each test runs the real config module in a fresh
-# .skogai under a temp dir: the real setup, moved somewhere else.
+# docs/config.md as tests. each test runs the repo's bin/config against a
+# fresh .skogai under a temp dir: the real setup, moved somewhere else.
 
 setup() {
     local repo
     repo="$(cd "$BATS_TEST_DIRNAME/.." && pwd)"
     cd "$BATS_TEST_TMPDIR"
-    mkdir -p .skogai/base/module/config .skogai/base/config .skogai/config
-    cp "$repo/.skogai/base/config.md" .skogai/base/
-    cp "$repo/.skogai/base/module/config/argc.sh" .skogai/base/module/config/
-    config=$PWD/.skogai/base/module/config/argc.sh
+    mkdir -p .skogai/base/config .skogai/config
+    # SKOGAI_TEST_ROOT: an unpacked package, to test the install instead
+    if [[ -n ${SKOGAI_TEST_ROOT:-} ]]; then
+        cp "$SKOGAI_TEST_ROOT/usr/share/skogai/base/config.md" .skogai/base/
+        config=$SKOGAI_TEST_ROOT/usr/bin/skogai-config
+    else
+        cp "$repo/.skogai/base/config.md" .skogai/base/
+        config=$repo/bin/config
+    fi
     # declared keys, as a system default
     md .skogai/base/config/config.system.md \
         'core.name: skogai' 'core.debug: false' 'core.retries: 3' \

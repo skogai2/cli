@@ -1,7 +1,0 @@
-# system defaults: the base case every other scope is applied on top of.
-# placeholders, one per type, to exercise the lookup.
-[core]
-	name = skogai
-	debug = false
-	retries = 3
-	logdir = .skogai/logs
