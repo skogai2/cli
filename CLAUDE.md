@@ -67,13 +67,15 @@ sandboxes with only a project repo checked out?
 - argc first: whatever argc comments can express (usage, help,
   validation, defaults, choices, env, completion, required tools) is
   written as comments, never as bash.
-- Settings are mise's, in the `skogai` env. See `docs/config.md`.
+- A setting is an argc option bound to a `SKOGAI_*` env var, its
+  default in the comment; mise layers its value in the `skogai` env.
+  See `docs/config.md`.
 - A command is an argc script that describes its own interface in
   comments. Shared helpers live in `lib/`; argc needs `_choice_*`
   functions in the script itself, so those stay in `bin/`.
 - A module is a markdown file: frontmatter says what it is (`type`,
-  `name`, `description`, `command`, `tools`, `requires`) and holds its
-  defaults; the body is its docs.
+  `name`, `description`, `command`, `tools`, `requires`); the body is
+  its docs.
 - `.skogai/base/<path>` is a default, `.skogai/<path>` its override.
   `base/` is committed and never written by a command.
 - Upgrades are manual and local, on the user's machine, never inside a
@@ -92,14 +94,14 @@ sandboxes with only a project repo checked out?
 
 ## modules
 
-- config - settings, held by mise. Decisions: `docs/config.md`; the
-  0.0.1 implementation in `bin/config` is to be replaced.
+- config - settings: argc options bound to env, layered by mise. Spec:
+  `docs/config.md`.
 
 ## testing
 
 - `bats test/` - every spec against the repo.
 - `test/install.sh` - builds the package from HEAD, unpacks it into a
-  temp root, and runs the same tests against the installed commands.
+  temp root, and checks it holds the repo's base and commands.
 - `shellcheck -x bin/* lib/*.sh test/*.sh` - clean.
 
 A thing is done when its spec, tests and help text agree.
@@ -114,12 +116,14 @@ A thing is done when its spec, tests and help text agree.
 - [x] tests in a relocated `.skogai`, against repo and package
 - [x] pacman package
 
-### next
+### 0.0.2 - config on mise
 
-- config on mise: settle the open points in `docs/config.md`, then
-  shrink or drop `bin/config`
+- [x] a setting is an argc option bound to env, default in the comment
+- [x] layers, set, unset and origin from mise's `skogai` env
+- [x] the 0.0.1 store and `bin/config` removed
+
+### next
 
 - the runner: a `skogai` command that runs a module's `command`
 - how a repo copies the installed base and records its version
-- extra file layers and module-scoped keys, as modules of their own
 - a type module (path, ...) using argc's runtime validation
