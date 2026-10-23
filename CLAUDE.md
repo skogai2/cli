@@ -167,6 +167,30 @@ Agreed overall, from claude's first assumptions and the user's answers.
 - done - tests that run with only the repo (bats, against a relocated
   setup), help text, and a line in this file.
 
+### config as markdown frontmatter? (user's experiment, not decided)
+
+The user tried `tmp/frontmatter/argc.sh` against
+`.skogai/base/global.config.md`. It is extracted from the old runner, so
+only its intents are recorded here, not its code.
+
+- one file is both docs and settings: yaml frontmatter holds the keys, the
+  markdown body explains them.
+- a module describes itself the same way: `type`, `name`, `description`,
+  `command`, `tools`, `requires`.
+- each `x.md` layer has an `x.local.md` applied after it; writes go to the
+  `.local.md`, never the committed file. A candidate answer to where
+  runtime values live.
+- a null removes a key an earlier layer set, so a layer can delete as well
+  as override; a full diff, not only overrides.
+- lists are one value; nested maps flatten to dotted keys.
+- env names: `.` becomes `_`, `-` is dropped, `_` in a key reads as `-`.
+  This answers the `_` clash noted under keys.
+- every value knows which layer it came from (`--show-origin`).
+- argc as the command runner, yq as the parser.
+
+Against the git-config decision: frontmatter needs yq in the sandbox and
+has richer types; git config needs only git. Not decided.
+
 ### how does `.skogai/base` track its point in time?
 
 First assumption: a plain copy of `/etc/skogai` plus the package version
@@ -236,7 +260,8 @@ there. Each scope is a folder holding a git-config file `config`:
 - global - `.skogai/base/global`
 - local - `.skogai/base/local`
 
-Where runtime values live is not decided yet.
+Where runtime values live is not decided yet; see the `.local.md`
+idea under open questions.
 
 #### first milestone: simple install with tests and a few settings
 
