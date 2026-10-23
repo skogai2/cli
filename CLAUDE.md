@@ -90,7 +90,14 @@ The ideas the cli is built around. One line each: name - what it means.
 
 What the cli uses or works with, and why. One line each: tool - its role.
 
-- _(to be described)_
+- pacman - installs skogai as a versioned package, to try a more versioned
+  workflow. New to the user; an experiment. The package owns
+  `/etc/skogai`, so the base case (system defaults) arrives and updates
+  as a package version.
+
+Open thought (not agreed): a repo's base snapshot could record which
+package version it was taken from, so "base state at a point in time" has
+a name.
 
 ## roadmap
 
@@ -103,9 +110,14 @@ Each phase lists the intent it serves and how we know it is done.
 - [ ] choose language/runtime from the intentions, not from habit
 - [ ] decide what "done" means for a command (tests, docs, help text)
 
-### phase 1 - first command
+### phase 1 - settings
 
-- [ ] _(the smallest command that proves the core intent)_
+Settings alone are a starting point on their own.
+
+- [ ] key-value lookup across system, global, local, env
+- [ ] every key has a default from the system layer
+- [ ] a repo carries its base snapshot
+- [ ] installed as a pacman package that owns `/etc/skogai`
 
 ### later
 
