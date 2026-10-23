@@ -129,6 +129,18 @@ out, not reinvented. Known so far: pacman installs to one root with one
 database by default, but can target another root and database, which
 could make a repo-level install a pacman install too.
 
+### upgrades are manual and local (decided, for now)
+
+Upgrading a repo's install is done by hand, on the user's machine or an
+arch base, never inside a sandbox.
+
+- why: modules (see modular) can be one-time per repo, and each update
+  likely carries choices that should be looked over anyway.
+- consequence: a sandbox never needs pacman. It only uses what the last
+  upgrade committed into the repo, which is the base snapshot.
+- not ideal: in a perfect world upgrades would not need a human. Accepted
+  to start; to be revisited later.
+
 ## roadmap
 
 Each phase lists the intent it serves and how we know it is done.
