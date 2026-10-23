@@ -29,10 +29,26 @@ Allowed sources of truth, in order:
   own.
 - `tmp/` is throwaway scratch space and is gitignored.
 
+- Write it down as we talk. Whatever we settle in conversation goes into
+  the sections below right away, in short form, so the broad basics can be
+  reviewed at a glance.
+
 ## intentions
 
 What the cli is for, in the user's words. Filled in together; empty until
 agreed.
+
+- _(to be described)_
+
+## concepts
+
+The ideas the cli is built around. One line each: name - what it means.
+
+- _(to be described)_
+
+## tools
+
+What the cli uses or works with, and why. One line each: tool - its role.
 
 - _(to be described)_
 
